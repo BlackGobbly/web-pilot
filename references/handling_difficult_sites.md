@@ -238,8 +238,8 @@ When a site is persistently blocked, consider these alternatives:
 
 | Target | Alternative | Access Method |
 |--------|------------|---------------|
-| ScienceDirect | Semantic Scholar, arXiv, Unpaywall | Tier 1 WebFetch / API |
-| Google Scholar | Semantic Scholar API, CrossRef API | Tier 1 WebFetch |
+| ScienceDirect | Semantic Scholar, arXiv, Unpaywall | Tier 1 static fetch / API |
+| Google Scholar | Semantic Scholar API, CrossRef API | Tier 1 static fetch |
 | News sites | RSS feeds, Google News, archive.is | Tier 1 |
 | E-commerce | Official APIs, Google Shopping, price aggregators | Varies |
 | Social media | Official APIs (where available) | API |

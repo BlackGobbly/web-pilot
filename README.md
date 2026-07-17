@@ -1,25 +1,23 @@
 # web-pilot
 
-A **3-tier web capture and browser automation skill** for [Claude Code](https://claude.ai/code). Intelligently escalates from lightweight static fetching to full browser automation when needed.
+A **3-tier web capture and browser automation toolkit** for ai-agent workflows. It helps agents escalate from lightweight static fetching to Playwright rendering and, when authorized, user-supervised browser automation.
 
 ## Tier Overview
 
 | Tier | Method | Use Case | Speed | Success Rate |
 |:----:|:-------|:---------|:-----:|:------------:|
-| **1** | WebFetch (built-in Claude Code) | Static HTML, articles, API responses | ⚡ Fast | ~60% |
+| **1** | Static fetch (agent-native fetch, API call, or `curl`) | Static HTML, articles, API responses | ⚡ Fast | ~60% |
 | **2** | Node.js + Playwright (`scripts/web_capture.js`) | JS-rendered pages (SPA/React/Vue), resilient rendering for authorized testing | 🚀 Fast | ~85% |
 | **3** | CDP real browser (`agent-browser` CLI) | CAPTCHA, login, complex interaction, QA testing | 🐢 Slow | ~95% |
 
 ## Installation
 
-### As a Claude Code Skill (Auto-Load)
+### As an ai-agent Toolkit
 
-This repo **is already a valid skill package** — `.claude/skills/web-pilot/` contains the skill definition. To use it:
+This repo includes reusable scripts plus optional agent-specific instruction files. To use it directly:
 
 **Option A — Use directly (if you cloned this repo):**
 ```bash
-# You're already in the repo — Claude Code will auto-load the skill
-# Just install the script dependencies:
 npm install
 npm run install:browsers
 pip install -r requirements.txt
@@ -31,15 +29,16 @@ cd /your/project
 mkdir -p .claude/skills
 cp -r /path/to/web-pilot/.claude/skills/web-pilot .claude/skills/web-pilot
 
-# Also copy the scripts and package.json:
+# Also copy the shared scripts and dependency files:
 cp /path/to/web-pilot/scripts/*.js scripts/
 cp /path/to/web-pilot/package.json .
+cp /path/to/web-pilot/requirements.txt .
 npm install
 npm run install:browsers
 pip install -r requirements.txt
 ```
 
-After installation, Claude Code will auto-load the skill when you use keywords like "browser", "scrape", or "screenshot".
+See [docs/portability.md](docs/portability.md) for platform-specific compatibility notes.
 
 ### Verify
 
@@ -51,10 +50,10 @@ If you see "Example Domain" in the output, everything is working.
 
 ### Tier 1 — Static Fetch (no setup needed)
 
-Use Claude Code's built-in `WebFetch` tool directly:
+Use your agent's built-in fetch tool, an API request, or `curl` directly:
 
 ```
-WebFetch(url="https://example.com", prompt="Extract the article title and body")
+curl https://example.com
 ```
 
 ### Tier 2 — Playwright Capture

@@ -1,6 +1,6 @@
 ---
 name: web-pilot
-description: "Intelligent web capture and browser automation for Claude Code. Three-tier escalation for authorized work: WebFetch static fetch → Playwright JS rendering → CDP real browser for user-supervised CAPTCHA, login, and interactive QA."
+description: "Intelligent web capture and browser automation for ai-agent workflows. Three-tier escalation for authorized work: static fetch → Playwright JS rendering → CDP real browser for user-supervised CAPTCHA, login, and interactive QA."
 risk: medium
 source: custom
 date_added: '2026-06-30'
@@ -31,11 +31,11 @@ triggers:
 
 ## Overview
 
-Intelligent web scraping and browser control with a **three-tier progressive strategy**, escalating automatically from the lightest to the most powerful method.
+Intelligent web capture and browser control for ai-agent workflows with a **three-tier progressive strategy**, escalating automatically from the lightest to the most powerful authorized method.
 
 | Tier | Method | Use Case | Speed | Success Rate |
 |:----:|:-------|:---------|:----:|:------------:|
-| **1** | WebFetch (built-in Claude Code) | Static HTML, articles, API responses | ⚡ Fast | ~60% |
+| **1** | Static fetch (agent-native fetch, API call, or `curl`) | Static HTML, articles, API responses | ⚡ Fast | ~60% |
 | **2** | Node.js + Playwright (`scripts/web_capture.js`) | JS-rendered pages (SPA/React/Vue), resilient rendering for authorized testing | 🚀 Fast | ~85% |
 | **3** | CDP real browser (`agent-browser` CLI) | CAPTCHA, login, complex interaction, QA testing | 🐢 Slow | ~95% |
 
@@ -43,7 +43,7 @@ Intelligent web scraping and browser control with a **three-tier progressive str
 
 - Scraping web page content or extracting structured data
 - Page is JS-rendered (SPA, lazy-loaded content)
-- A page you are authorized to inspect needs browser rendering after WebFetch failed
+- A page you are authorized to inspect needs browser rendering after static fetch failed
 - Handling pagination, waiting for elements, dynamic content
 - CAPTCHA encountered (needs manual intervention via Tier 3)
 - **Browser interaction**: clicking buttons, filling forms, testing web apps
@@ -53,13 +53,13 @@ Intelligent web scraping and browser control with a **three-tier progressive str
 
 | Scenario | Recommended Tier | Method |
 |:---------|:---------------:|:-------|
-| Static article | Tier 1 | `WebFetch(url)` |
-| API data | Tier 1 | `WebFetch(url, prompt)` |
+| Static article | Tier 1 | agent-native fetch, API request, or `curl` |
+| API data | Tier 1 | agent-native fetch, API request, or `curl` |
 | JS-rendered SPA | Tier 2 | `node scripts/web_capture.js <url>` |
 | Structured data (JSON) | Tier 2 | `--output json` |
 | E-commerce / listings | Tier 2 | `--json-selectors ".price,.name"` |
-| Wikipedia / docs | Tier 1 | `WebFetch(url)` |
-| Academic search (Semantic Scholar, arXiv) | Tier 2 | `web_capture.js` or WebFetch for API |
+| Wikipedia / docs | Tier 1 | agent-native fetch, API request, or `curl` |
+| Academic search (Semantic Scholar, arXiv) | Tier 2 | `web_capture.js` or static API fetch |
 | ScienceDirect | Tier 3 | CDP + manual CAPTCHA; see [handling_difficult_sites.md](references/handling_difficult_sites.md) |
 | Login-required sites | Tier 3 | agent-browser CDP |
 | Web app QA testing | Tier 3 | agent-browser CDP |
@@ -74,7 +74,7 @@ User requests web capture or browse
     │
     ▼
 ┌──────────────────────────┐
-│ Tier 1: WebFetch         │ ◀── First attempt (lightest)
+│ Tier 1: Static fetch     │ ◀── First attempt (lightest)
 │ (quick try)               │
 └──────────┬───────────────┘
            │ Success? → Output ✓
@@ -99,9 +99,9 @@ User requests web capture or browse
 
 ---
 
-## Tier 1: WebFetch (Static Pages)
+## Tier 1: Static Fetch (Static Pages)
 
-**Tool:** `WebFetch` built-in function
+**Tool:** An agent-native fetch tool, API request, or `curl`
 
 **Use cases:**
 - Static HTML pages (articles, blogs, documentation)
@@ -110,7 +110,7 @@ User requests web capture or browse
 
 **Usage:**
 ```markdown
-WebFetch(url="https://example.com", prompt="Extract the article title and body")
+fetch("https://example.com")
 ```
 
 **Auto-escalation triggers** (upgrade to Tier 2):
@@ -412,10 +412,10 @@ agent-browser screenshot /tmp/local-preview.png
 
 | Observation | Diagnosis | Escalate To |
 |:------------|:----------|:-----------:|
-| WebFetch returns empty or < 100 chars | Likely JS-rendered | Tier 2 |
+| Static fetch returns empty or < 100 chars | Likely JS-rendered | Tier 2 |
 | Content says "loading…" or "Please enable JavaScript" | JS-required page | Tier 2 |
 | 403, 429, or "blocked" response | Anti-bot blocked | Tier 2 |
-| WebFetch returns notably incomplete content | Dynamic loading | Tier 2 |
+| Static fetch returns notably incomplete content | Dynamic loading | Tier 2 |
 | Tier 2 shows CAPTCHA page | CAPTCHA triggered | Tier 3 |
 | Tier 2 shows login page | Authentication needed | Tier 3 |
 | Tier 2 times out (> 30s) | Complex/heavy page | Tier 3 |
@@ -426,8 +426,8 @@ agent-browser screenshot /tmp/local-preview.png
 
 | Site | Recommended Strategy | Notes |
 |:-----|:--------------------|:------|
-| Wikipedia | Tier 1 WebFetch | Static content |
-| GitHub | Tier 1 WebFetch | Mostly static |
+| Wikipedia | Tier 1 static fetch | Static content |
+| GitHub | Tier 1 static fetch | Mostly static |
 | Generic e-commerce | Tier 2 web_capture | Dynamic loading |
 | Social media | Tier 2 → Tier 3 | Login may require Tier 3 |
 | Academic journals (general) | Tier 2 web_capture | Generally accessible |

@@ -1,200 +1,161 @@
-# Platform Portability Guide
+# Platform Compatibility Guide
 
-This document explains how to adapt the web-pilot skill for use with **Codex CLI** and **Workbuddy**. The core content (3-tier escalation methodology, CLI scripts, website patterns) is platform-agnostic — only the configuration format differs.
+web-pilot is platform-agnostic at its core: the shared scripts in `scripts/`, the Node.js dependencies in `package.json`, the Python dependency in `requirements.txt`, and the guidance in `references/` can be used by any ai-agent workflow that can run shell commands.
 
----
-
-## Contents Shared Across All Platforms
-
-Regardless of platform, these files are universally usable:
-
-| File | Purpose | Format |
-|------|---------|--------|
-| `scripts/web_capture.js` | Tier 2 Playwright capture (standalone Node.js CLI) | Standard JS |
-| `scripts/scraper_worker.js` | Config-driven batch scraping engine | Standard JS |
-| `scripts/scraper.py` | Python orchestrator for Excel-driven scraping | Standard Python |
-| `package.json` | Node.js dependencies | Standard NPM |
-| `references/handling_difficult_sites.md` | Difficult-site handling patterns and authorized-testing escalation guidance | Plain Markdown |
-
-All scripts accept standard CLI arguments — no platform-specific dependencies.
+This document only describes compatibility notes for Claude Code, Codex, and Workbuddy. The main README stays agent-neutral.
 
 ---
 
-## Codex CLI
+## Shared Components
 
-[Codex CLI](https://github.com/openai/codex) is OpenAI's agentic coding tool. It reads project-level instructions from a `CODEX.md` file at the project root.
+| File | Purpose | Platform dependency |
+|------|---------|---------------------|
+| `scripts/web_capture.js` | Tier 2 Playwright capture CLI | None beyond Node.js |
+| `scripts/scraper_worker.js` | JSON-driven batch scraping worker | None beyond Node.js |
+| `scripts/scraper.py` | Excel-driven Python orchestrator | Python + `openpyxl` |
+| `package.json` | Node.js dependency and test scripts | Standard npm |
+| `requirements.txt` | Python dependency declaration | Standard pip |
+| `references/handling_difficult_sites.md` | Authorized difficult-site handling guidance | Plain Markdown |
 
-### Installation
+Install the shared runtime dependencies with:
 
 ```bash
-cd your-project
-# Copy web-pilot scripts into your project
-cp -r /path/to/web-pilot/scripts .
-cp /path/to/web-pilot/package.json .
 npm install
 npm run install:browsers
 pip install -r requirements.txt
 ```
 
-### Setup: `CODEX.md`
+Verify the shared script layer with:
 
-Create `CODEX.md` at your project root:
+```bash
+node scripts/web_capture.js https://example.com --max-length 200
+node scripts/web_capture.js https://example.com --output json --quiet
+```
+
+---
+
+## Claude Code Compatibility
+
+Claude Code can use the included skill package at:
+
+```text
+.claude/skills/web-pilot/SKILL.md
+```
+
+Use this layout when you want Claude Code to auto-load the web-pilot instructions from a project:
+
+```text
+project/
+├── .claude/skills/web-pilot/SKILL.md
+├── .claude/skills/web-pilot/references/handling_difficult_sites.md
+├── scripts/
+├── package.json
+└── requirements.txt
+```
+
+Typical copy flow:
+
+```bash
+mkdir -p .claude/skills
+cp -r /path/to/web-pilot/.claude/skills/web-pilot .claude/skills/web-pilot
+cp -r /path/to/web-pilot/scripts .
+cp /path/to/web-pilot/package.json .
+cp /path/to/web-pilot/requirements.txt .
+```
+
+Compatibility notes:
+
+- Claude Code uses `SKILL.md` with YAML frontmatter and Markdown instructions.
+- The `triggers`, `risk`, `tools`, and `tags` fields are Claude Code-specific metadata.
+- Tier 1 should use whatever fetch capability is available in the active Claude Code environment.
+- Tier 2 and Tier 3 use the shared scripts and `agent-browser` workflow described in the skill.
+
+---
+
+## Codex Compatibility
+
+Codex can use web-pilot as ordinary project tooling. Place the shared scripts in the repo and add project instructions in `CODEX.md`.
+
+Example `CODEX.md`:
 
 ```markdown
 # web-pilot: Web Capture & Browser Automation
 
-You have access to Playwright-based web scraping scripts in `scripts/`.
-Use these for JS-rendered pages, structured data extraction, and multi-page scraping.
+Use the shared scripts in `scripts/` for authorized web capture and browser automation.
 
-## Available Scripts
+## Available Commands
 
-- `node scripts/web_capture.js <url>` — Tier 2 page capture (supports --output json/markdown/screenshot, --stealth, --wait)
-- `echo '[{...}]' | node scripts/scraper_worker.js` — Config-driven batch scraping from stdin JSON
-- `python scripts/scraper.py --excel config.xlsx` — Python orchestrator for Excel-based configs
+- `node scripts/web_capture.js <url>` — Playwright page capture
+- `node scripts/web_capture.js <url> --output json` — structured capture
+- `node scripts/web_capture.js <url> --output screenshot` — screenshot capture
+- `echo '[{...}]' | node scripts/scraper_worker.js` — JSON-driven batch scraping
+- `python scripts/scraper.py --excel config.xlsx` — Excel-driven scraping workflow
 
-## Three-Tier Escalation Strategy
+## Escalation Strategy
 
-1. **Tier 1 (WebFetch)**: For static HTML, articles, API responses. Use your built-in fetch tool.
-2. **Tier 2 (Playwright)**: For JS-rendered pages, SPAs, and authorized testing where a real renderer is needed. Use `scripts/web_capture.js`.
-3. **Tier 3 (CDP real browser)**: For CAPTCHA, login, complex interaction. Requires manual Chrome + agent-browser CLI.
+1. Static fetch for simple pages and APIs.
+2. Playwright rendering for JavaScript-rendered pages.
+3. User-supervised real-browser CDP only when the user is authorized to access the page.
 
-## Anti-Bot Handling
+## Safety Rules
 
-- `--stealth` applies compatibility tweaks for authorized testing; it must not be used to defeat access controls
-- For aggressive blocking, use Tier 3 with real Chrome CDP
-- See `references/handling_difficult_sites.md` for CAPTCHA/login/pagination tactics
-
-## Ethical Guidelines
-
-- Respect robots.txt and Terms of Service
-- Add delays between requests; respect 429 responses
-- Do not bypass login walls, paywalls, CAPTCHA, security pages, age gates, IP blocks, or other access controls
-- Cite sources when republishing scraped data
+- Respect robots.txt, site terms, API policies, rate limits, and privacy rules.
+- Do not bypass login walls, paywalls, CAPTCHA, security pages, age gates, IP blocks, or other access controls.
+- Stop when access is denied unless the user confirms authorization and provides an approved path.
 ```
 
-### Key Differences from Claude Code
+Compatibility notes:
 
-| Feature | Claude Code SKILL.md | Codex CLI CODEX.md |
-|---------|---------------------|-------------------|
-| Format | YAML frontmatter + Markdown | Plain Markdown |
-| Triggers | `triggers:` field for auto-invoke | Not supported |
-| Tools list | `tools:` field declaring compatible IDEs | Not supported |
-| Risk level | `risk:` field | Not supported |
-| Escalation logic | AI reads SKILL.md and decides tier itself | AI reads CODEX.md and decides tier itself |
-
-### Notes
-
-- Codex CLI runs scripts autonomously — ensure you review file operations before execution.
-- Codex has no built-in `WebFetch` equivalent; use `curl` or a fetch polyfill for Tier 1.
+- Codex reads ordinary project instructions such as `CODEX.md`; it does not use Claude Code skill frontmatter.
+- Codex can run the same Node.js and Python commands from the project root.
+- If no agent-native fetch tool is available, use `curl`, a small script, or the Playwright capture command for Tier 1/2.
 
 ---
 
-## Workbuddy
+## Workbuddy Compatibility
 
-[Workbuddy](https://github.com/nicholasgriffintn/workbuddy) (or compatible agent-workspace tools) typically uses instruction files to guide AI behavior.
+Workbuddy and similar agent-workspace tools can use web-pilot through a plain instruction file, commonly `.workbuddy/instructions.md`.
 
-### Setup: `.workbuddy/instructions.md`
+Example `.workbuddy/instructions.md`:
 
-Place this file at `.workbuddy/instructions.md` in your project:
+```text
+# web-pilot
 
-```markdown
-# web-pilot for Workbuddy
+Use `scripts/web_capture.js` and `scripts/scraper_worker.js` for authorized web capture.
 
-You are a web capture and browser automation assistant using a 3-tier escalation strategy.
+## Common Commands
 
-## Tier 1 — Static Fetch
-Use your built-in HTTP fetch for simple pages. Best for articles, docs, API responses.
+node scripts/web_capture.js <url>
+node scripts/web_capture.js <url> --output json
+node scripts/web_capture.js <url> --output screenshot
 
-## Tier 2 — Playwright Capture
-When content requires JavaScript rendering, use:
-```
-node scripts/web_capture.js <url> [--output json|markdown|screenshot] [--stealth] [--wait .selector]
-```
+## Responsible Use
 
-Options:
-- `--output json`: Structured data with links and metadata
-- `--output markdown`: Heading-parsed content
-- `--output screenshot`: Full-page or viewport PNG
-- `--stealth`: Compatibility tweaks for authorized testing; do not use it to defeat access controls
-- `--wait .selector`: Wait for element before extraction
-- `--executable-path /path/to/chrome`: Custom browser binary
-
-## Tier 3 — Real Browser (CDP)
-For CAPTCHA, login, or complex UI interaction:
-1. User starts Chrome: `chrome --remote-debugging-port=9223`
-2. Connect: `agent-browser connect http://127.0.0.1:9223`
-3. Navigate: `agent-browser open <url>`
-4. Snapshot → Interact → Extract
-
-## Batch Scraping
-For multi-site scraping, prepare a JSON config and pipe to the worker:
-```json
-[{"url":"https://site.com","container":"ul.list","item":"li","pagination":"click:.next"}]
-```
-Then: `echo '...' | node scripts/scraper_worker.js`
-
-## Ethical Rules
-- Respect robots.txt and site ToS
-- Rate-limit: 2-5s delays between requests, backoff on 429
-- No programmatic CAPTCHA, paywall, login-wall, security-page, age-gate, IP-block, or access-control circumvention
-- Manual CAPTCHA resolution only via Tier 3 (real browser)
+- Use only for pages the user owns, is authorized to test, or may lawfully access.
+- Respect robots.txt, site terms, rate limits, and privacy requirements.
+- Do not bypass access controls, CAPTCHA, paywalls, login walls, or security checks.
 ```
 
-### Key Differences from Claude Code
+Compatibility notes:
 
-| Feature | Claude Code SKILL.md | Workbuddy instructions.md |
-|---------|---------------------|--------------------------|
-| File location | `.claude/skills/<name>/SKILL.md` | `.workbuddy/instructions.md` |
-| Auto-trigger | `triggers:` frontmatter | Manual invocation only |
-| Script references | Relative from skill dir | Relative from project root |
-| Multi-file | Single SKILL.md + references | Usually flat instruction file |
-
-### Notes
-
-- Workbuddy may have different tool-calling capabilities than Claude Code — adjust Tier 1 strategy accordingly.
-- The `references/handling_difficult_sites.md` file can be referenced directly in instructions.
+- Workbuddy generally uses plain Markdown instructions rather than skill metadata.
+- Keep script paths relative to the project root.
+- The shared `references/handling_difficult_sites.md` file can be linked from the instruction file.
 
 ---
 
-## Maintaining Cross-Platform Compatibility
+## Compatibility Matrix
 
-If you maintain this skill across multiple platforms:
-
-```
-project/
-├── .claude/skills/web-pilot/SKILL.md    # Claude Code
-├── CODEX.md                              # Codex CLI (copy from docs/)
-├── .workbuddy/instructions.md            # Workbuddy (copy from docs/)
-├── docs/portability.md                   # This guide
-├── scripts/                              # Shared — works everywhere
-│   ├── web_capture.js
-│   ├── scraper_worker.js
-│   └── scraper.py
-└── references/
-    └── handling_difficult_sites.md       # Shared — works everywhere
-```
-
-The **scripts/** and **references/** directories are platform-agnostic. Only the configuration/instruction files differ.
+| Capability | Claude Code | Codex | Workbuddy |
+|------------|-------------|-------|-----------|
+| Shared Node.js scripts | Yes | Yes | Yes |
+| Shared Python script | Yes | Yes | Yes |
+| Auto-loaded skill metadata | Yes, via `.claude/skills/.../SKILL.md` | No | No |
+| Plain project instructions | Optional | Yes, via `CODEX.md` | Yes, via `.workbuddy/instructions.md` |
+| Tier 1 static fetch | Environment-dependent | Environment-dependent | Environment-dependent |
+| Tier 2 Playwright capture | Yes | Yes | Yes |
+| Tier 3 CDP browser workflow | Yes, if `agent-browser` is installed | Yes, if `agent-browser` is installed | Yes, if `agent-browser` is installed |
 
 ---
 
-## Verification Checklist
-
-After setting up on any platform, verify:
-
-```bash
-# Test Tier 2 script
-node scripts/web_capture.js https://example.com --max-length 200
-
-# Test stealth mode
-node scripts/web_capture.js https://example.com --stealth --max-length 200
-
-# Test JSON output  
-node scripts/web_capture.js https://example.com --output json --quiet
-```
-
-All three should return content without hardcoded path errors.
-
----
-
-> Last updated: 2026-07-16
+> Last updated: 2026-07-17

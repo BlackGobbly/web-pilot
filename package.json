@@ -1,11 +1,11 @@
 {
   "name": "web-pilot",
   "version": "1.0.0",
-  "description": "3-tier web capture and browser automation for Claude Code",
+  "description": "3-tier web capture and browser automation for ai-agent workflows",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/web-pilot"
+    "url": "https://github.com/BlackGobbly/web-pilot"
   },
   "engines": {
     "node": ">=18"
