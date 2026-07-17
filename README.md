@@ -6,7 +6,7 @@ A **3-tier web capture and browser automation AI-agent skill**. Intelligently es
 
 | Tier | Method | Use Case | Speed | Success Rate |
 |:----:|:-------|:---------|:-----:|:------------:|
-| **1** | WebFetch | Static HTML, articles, API responses | ⚡ Fast | ~60% |
+| **1** | WebFetch | Static HTML, articles, API responses | ⚡ Swift  | ~60% |
 | **2** | Node.js + Playwright (`scripts/web_capture.js`) | JS-rendered pages (SPA/React/Vue), resilient rendering for authorized testing | 🚀 Fast | ~85% |
 | **3** | CDP real browser (`agent-browser` CLI) | CAPTCHA, login, complex interaction, QA testing | 🐢 Slow | ~95% |
 
