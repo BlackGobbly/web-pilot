@@ -1,0 +1,21 @@
+{
+  "name": "web-pilot",
+  "version": "1.0.0",
+  "description": "3-tier web capture and browser automation for Claude Code",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/web-pilot"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install:browsers": "playwright install chromium",
+    "test:capture": "node scripts/web_capture.js https://example.com --max-length 200",
+    "test:syntax": "node --check scripts/web_capture.js && node --check scripts/scraper_worker.js"
+  },
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}

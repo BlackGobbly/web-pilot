@@ -1,0 +1,29 @@
+# Dependencies and package-manager state
+node_modules/
+npm-debug.log*
+
+# Local outputs
+output/
+_output/
+*.log
+capture_*.png
+
+# Python cache/build outputs
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Local environment and editor files
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-*
+
+# Git metadata
+.git/
